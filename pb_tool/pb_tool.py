@@ -25,10 +25,9 @@ import subprocess
 import shutil
 import errno
 import glob
-import urllib2
-import ConfigParser
+import urllib3
+from configparser import ConfigParser
 from string import Template
-from distutils.dir_util import copy_tree
 
 import click
 
@@ -135,12 +134,12 @@ def deploy_files(config_file, plugin_path, confirm=True, quick=False):
 
         else:
             if confirm:
-                print """Deploying will:
+                print("""Deploying will:
                 * Remove your currently deployed version
                 * Compile the ui and resource files
                 * Build the help docs
                 * Copy everything to your {} directory
-                """.format(plugin_dir)
+                """.format(plugin_dir))
 
                 proceed = click.confirm("Proceed?")
             else:
@@ -170,7 +169,7 @@ def install_files(plugin_dir, cfg):
         click.secho("Copying {0}".format(file), fg='magenta', nl=False)
         try:
             shutil.copy(file, os.path.join(plugin_dir, file))
-            print ""
+            print("")
         except Exception as oops:
             errors.append(
                 "Error copying files: {0}, {1}".format(file, oops.strerror))
@@ -183,8 +182,8 @@ def install_files(plugin_dir, cfg):
                     fg='magenta',
                     nl=False)
         try:
-            copy_tree(xdir, "{0}/{1}".format(plugin_dir, xdir))
-            print ""
+            shutil.copytree(xdir, "{0}/{1}".format(plugin_dir, xdir))
+            print("")
         except Exception as oops:
             errors.append(
                 "Error copying directory: {0}, {1}".format(xdir, oops.message))
@@ -196,20 +195,19 @@ def install_files(plugin_dir, cfg):
     click.secho("Copying {0} to {1}".format(help_src, help_target),
                 fg='magenta',
                 nl=False)
-    # shutil.copytree(help_src, help_target)
     try:
-        copy_tree(help_src, help_target)
-        print ""
+        shutil.copytree(help_src, help_target)
+        print("")
     except Exception as oops:
         errors.append("Error copying help files: {0}, {1}".format(
             help_src, oops.message))
         click.echo(click.style(' ----> ERROR', fg='red'))
         fail = True
     if fail:
-        print "\nERRORS:"
+        print("\nERRORS:")
         for error in errors:
-            print error
-        print ""
+            print(error)
+        print("")
         print(
             "One or more files/directories specified in your config file\n"
             "failed to deploy---make sure they exist or if not needed remove\n"
@@ -236,7 +234,7 @@ def clean_deployment(ask_first=True, config='pb_tool.cfg', plugin_dir=None):
             shutil.rmtree(plugin_dir)
             return True
         except OSError as oops:
-            print 'Plugin was not deleted: {0}'.format(oops.strerror)
+            print('Plugin was not deleted: {0}'.format(oops.strerror))
     else:
         click.echo('Plugin was not deleted')
     return False
@@ -258,7 +256,7 @@ def clean_docs():
         subprocess.check_call([makeprg, 'clean'])
         os.chdir(cwd)
     else:
-        print "No help directory exists in the current directory"
+        print("No help directory exists in the current directory")
 
 
 @cli.command()
@@ -284,9 +282,9 @@ def clean(config):
     for file in files:
         try:
             os.unlink(file)
-            print "Deleted: {0}".format(file)
+            print("Deleted: {0}".format(file))
         except OSError as oops:
-            print "Couldn't delete {0}: {1}".format(file, oops.strerror)
+            print("Couldn't delete {0}: {1}".format(file, oops.strerror))
 
 
 @cli.command()
@@ -319,7 +317,7 @@ def build_docs():
         subprocess.check_call([makeprg, 'html'])
         os.chdir(cwd)
     else:
-        print "No help directory exists in the current directory"
+        print("No help directory exists in the current directory")
 
 
 @cli.command()
@@ -350,12 +348,12 @@ def translate(config):
                 for locale in locales:
                     (name, ext) = os.path.splitext(locale)
                     if ext != '.ts':
-                        print 'no ts extension'
+                        print('no ts extension')
                         locale = name + '.ts'
-                    print cmd, locale
+                    print(cmd, locale)
                     subprocess.check_call([cmd, os.path.join('i18n', locale)])
             else:
-                print "No translations are specified in {0}".format(config)
+                print("No translations are specified in {0}".format(config))
 
 
 @cli.command()
@@ -513,7 +511,7 @@ def list(config_file):
     if os.path.exists(config_file):
         with open(config_file) as cfg:
             for line in cfg:
-                print line[:-1]
+                print(line[:-1])
     else:
         click.secho(
             "There is no {0} file in the current directory".format(config_file),
@@ -589,14 +587,14 @@ def xxconfig(name, package):
     with open(fname, 'w') as f:
         f.write(cfg)
 
-    print "Created new config file in {0}".format(fname)
+    print("Created new config file in {0}".format(fname))
 
 
 @cli.command()
 def update():
     """ Check for update to pb_tool """
     try:
-        u = urllib2.urlopen('http://geoapt.net/pb_tool/current_version.txt')
+        u = urllib3.urlopen('http://geoapt.net/pb_tool/current_version.txt')
         version = u.read()[:-1]
         click.secho("Latest version is %s" % version, fg='green')
         # convert version numbers to int
@@ -609,11 +607,11 @@ def update():
             click.secho("You have Version %s" % __version()[0], fg='green')
             click.secho("You can upgrade by running this command:")
             cmd = 'pip install --upgrade pb_tool'
-            print "   %s" % cmd
+            print("   %s" % cmd)
         elif this_version > current_version:
             click.secho("You have development Version %s" % __version()[0], fg='green')
 
-    except urllib2.URLError as uoops:
+    except urllib3.URLError as uoops:
         click.secho("Unable to check for update.")
         click.secho("%s" % uoops.reason)
 
@@ -623,10 +621,10 @@ def check_cfg(cfg, section, name):
         cfg.get(section, name)
         return True
     except ConfigParser.NoOptionError as oops:
-        print oops.message
+        print(oops.message)
     except ConfigParser.NoSectionError:
-        print "Missing section '{0}' when looking for option '{1}'".format(
-            section, name)
+        print("Missing section '{0}' when looking for option '{1}'".format(
+            section, name))
     return False
 
 
@@ -640,8 +638,8 @@ def get_config(config='pb_tool.cfg'):
         #click.echo(cfg.sections())
         return cfg
     else:
-        print "There is no {0} file in the current directory".format(config)
-        print "We can't do anything without it"
+        print("There is no {0} file in the current directory".format(config))
+        print("We can't do anything without it")
         sys.exit(1)
 
 
@@ -656,7 +654,7 @@ def compiled_ui(cfg):
         #print "Compiled UI files: {}".format(compiled)
         return compiled
     except ConfigParser.NoSectionError as oops:
-        print oops.message
+        print(oops.message)
         sys.exit(1)
 
 
@@ -671,7 +669,7 @@ def compiled_resource(cfg):
         #print "Compiled resource files: {}".format(compiled)
         return compiled
     except ConfigParser.NoSectionError as oops:
-        print oops.message
+        print(oops.message)
         sys.exit(1)
 
 
@@ -684,7 +682,7 @@ def compile_files(cfg):
     pyuic4 = check_path('pyuic4')
 
     if not pyuic4:
-        print "pyuic4 is not in your path---unable to compile your ui files"
+        print("pyuic4 is not in your path---unable to compile your ui files")
     else:
         ui_files = cfg.get('files', 'compiled_ui_files').split()
         ui_count = 0
@@ -693,14 +691,14 @@ def compile_files(cfg):
                 (base, ext) = os.path.splitext(ui)
                 output = "{0}.py".format(base)
                 if file_changed(ui, output):
-                    print "Compiling {0} to {1}".format(ui, output)
+                    print("Compiling {0} to {1}".format(ui, output))
                     subprocess.check_call([pyuic4, '-o', output, ui])
                     ui_count += 1
                 else:
-                    print "Skipping {0} (unchanged)".format(ui)
+                    print("Skipping {0} (unchanged)".format(ui))
             else:
-                print "{0} does not exist---skipped".format(ui)
-        print "Compiled {0} UI files".format(ui_count)
+                print("{0} does not exist---skipped".format(ui))
+        print("Compiled {0} UI files".format(ui_count))
 
     # check to see if we have pyrcc4
     pyrcc4 = check_path('pyrcc4')
@@ -717,14 +715,14 @@ def compile_files(cfg):
                 (base, ext) = os.path.splitext(res)
                 output = "{0}.py".format(base)
                 if file_changed(res, output):
-                    print "Compiling {0} to {1}".format(res, output)
+                    print("Compiling {0} to {1}".format(res, output))
                     subprocess.check_call([pyrcc4, '-o', output, res])
                     res_count += 1
                 else:
-                    print "Skipping {0} (unchanged)".format(res)
+                    print("Skipping {0} (unchanged)".format(res))
             else:
-                print "{0} does not exist---skipped".format(res)
-        print "Compiled {0} resource files".format(res_count)
+                print("{0} does not exist---skipped".format(res))
+        print("Compiled {0} resource files".format(res_count))
 
 
 def copy(source, destination):
@@ -741,8 +739,7 @@ def copy(source, destination):
 
     """
     try:
-        #shutil.copytree(source, destination)
-        copy_tree(source, destination)
+        shutil.copytree(source, destination)
     except OSError as e:
         # If the error was caused because the source wasn't a directory
         if e.errno == errno.ENOTDIR:
