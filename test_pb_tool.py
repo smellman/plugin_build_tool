@@ -19,7 +19,7 @@ def test_clean():
 
 
 def test_cleandocs():
-    result = runner.invoke(pb_tool.cli, ['clean_docs'])
+    result = runner.invoke(pb_tool.cli, ['cleandocs'])
     assert result.exit_code == 0
 
 

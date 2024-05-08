@@ -30,7 +30,6 @@ import urllib.error
 import configparser
 import pathlib
 from string import Template
-from distutils.dir_util import copy_tree
 from datetime import datetime
 import pkgutil
 import webbrowser
@@ -200,7 +199,7 @@ def install_files(plugin_dir, cfg):
                     fg='magenta',
                     nl=False)
         try:
-            copy_tree(xdir, "{0}/{1}".format(plugin_dir, xdir))
+            shutil.copytree(xdir, "{0}/{1}".format(plugin_dir, xdir))
             print("")
         except Exception as oops:
             errors.append(
@@ -213,7 +212,7 @@ def install_files(plugin_dir, cfg):
                                 cfg.get('help', 'target'))
         # shutil.copytree(help_src, help_target)
         try:
-            copy_tree(help_src, help_target)
+            shutil.copytree(help_src, help_target)
             click.secho("Copying {0} to {1}".format(help_src, help_target),
                     fg='magenta',
                     nl=False)
@@ -265,7 +264,7 @@ def clean_deployment(ask_first=True, config='pb_tool.cfg', plugin_dir=None):
 
 
 @cli.command()
-def clean_docs():
+def cleandocs():
     """
     Remove the built HTML help files from the build directory
     """
@@ -1010,8 +1009,7 @@ def copy(source, destination):
 
     """
     try:
-        #shutil.copytree(source, destination)
-        copy_tree(source, destination)
+        shutil.copytree(source, destination)
     except OSError as e:
         # If the error was caused because the source wasn't a directory
         if e.errno == errno.ENOTDIR:
